@@ -132,7 +132,7 @@ public class LocalNotification : MonoBehaviour
 		if (isPaused) {
 			Debug.Log ("Create Notification");
 			CreateNotificationBatch ();
-				NotificationServices.Dispatch();
+			NotificationServices.Dispatch ();
 		} else {
 			Debug.Log ("Cancel Notification");
 			CancelAllLocalNotification ();
