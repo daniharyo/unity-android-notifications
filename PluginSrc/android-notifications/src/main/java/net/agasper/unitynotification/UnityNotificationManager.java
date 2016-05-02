@@ -13,21 +13,23 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.os.Build;
+import android.support.v4.app.NotificationCompat;
+import android.util.Log;
+
 import com.unity3d.player.UnityPlayer;
 
-import java.util.Stack;
+import java.net.Inet4Address;
 
 public class UnityNotificationManager extends BroadcastReceiver {
 
-    public static void SetNotification(int id, long delayMs, String gameName, String title, String message, String ticker, int sound, int vibrate,
-                                       int lights, String largeIconResource, String smallIconResource, int bgColor, int executeMode, String unityClass) {
-
+    public static void SetNotification(int id, long delayMs, String title, String summary, String[] message, String ticker, int sound, int vibrate,
+                                       int lights, String largeIconResource, String smallIconResource, int bgColor, int executeMode, String unityClass,String gameName) {
         Activity currentActivity = UnityPlayer.currentActivity;
         AlarmManager am = (AlarmManager)currentActivity.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(currentActivity, UnityNotificationManager.class);
-        intent.putExtra("gameName", gameName);
         intent.putExtra("ticker", ticker);
         intent.putExtra("title", title);
+        intent.putExtra("summary",summary);
         intent.putExtra("message", message);
         intent.putExtra("id", id);
         intent.putExtra("color", bgColor);
@@ -37,7 +39,9 @@ public class UnityNotificationManager extends BroadcastReceiver {
         intent.putExtra("l_icon", largeIconResource);
         intent.putExtra("s_icon", smallIconResource);
         intent.putExtra("activity", unityClass);
+        intent.putExtra("gameName",gameName);
 
+        Log.v("UnityClass", unityClass);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (executeMode == 2)
                 am.setExactAndAllowWhileIdle(0, System.currentTimeMillis() + delayMs, PendingIntent.getBroadcast(currentActivity, id, intent, PendingIntent.FLAG_UPDATE_CURRENT));
@@ -50,13 +54,15 @@ public class UnityNotificationManager extends BroadcastReceiver {
             am.set(0, System.currentTimeMillis() + delayMs, PendingIntent.getBroadcast(currentActivity, id, intent, PendingIntent.FLAG_UPDATE_CURRENT));
     }
 
+
+
     public void onReceive(Context context, Intent intent) {
         NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        String gameName = intent.getStringExtra("gameName");
         String ticker = intent.getStringExtra("ticker");
         String title = intent.getStringExtra("title");
-        String message = intent.getStringExtra("message");
+        String summary = intent.getStringExtra("summary");
+        String[] message = intent.getStringArrayExtra("message");
         String s_icon = intent.getStringExtra("s_icon");
         String l_icon = intent.getStringExtra("l_icon");
         int color = intent.getIntExtra("color", 0);
@@ -65,15 +71,11 @@ public class UnityNotificationManager extends BroadcastReceiver {
         Boolean vibrate = intent.getBooleanExtra("vibrate", false);
         Boolean lights = intent.getBooleanExtra("lights", false);
         int id = intent.getIntExtra("id", 0);
-
-        NotificationModel notificationModel = new NotificationModel(
-                ticker, title, message, s_icon, l_icon,
-                color, unityClass, sound,  vibrate, lights, id);
-
-        StackNotificationHelper.AddNotification(notificationModel);
-
+        String gameName = intent.getStringExtra("gameName");
         Resources res = context.getResources();
 
+
+        Log.v("UnityClass", unityClass);
         Class<?> unityClassActivity = null;
         try {
             unityClassActivity = Class.forName(unityClass);
@@ -81,40 +83,29 @@ public class UnityNotificationManager extends BroadcastReceiver {
             e.printStackTrace();
             return;
         }
-
         Intent notificationIntent = new Intent(context, unityClassActivity);
+
+//        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification.Builder builder = new Notification.Builder(context);
-        if (StackNotificationHelper.getNotificationModelList().size() > 1){
 
-            Notification.InboxStyle summaryStyle = new Notification.InboxStyle();
+        builder.setContentIntent(contentIntent)
+                .setWhen(System.currentTimeMillis())
+                .setAutoCancel(true)
+                .setContentTitle(title)
+                .setContentText(summary);
 
-            NotificationModel notif = new NotificationModel();
-            for (int i = 0; i < StackNotificationHelper.getNotificationModelList().size(); i++){
-                notif = StackNotificationHelper.getNotificationModelList().get(i);
-                summaryStyle.addLine(notif.getMessage());
-            }
+        Notification.InboxStyle inboxStyle = new Notification.InboxStyle();
 
-            String lastMessage = StackNotificationHelper.getNotificationModelList()
-                    .get(StackNotificationHelper.getNotificationModelList().size()-1)
-                    .getMessage();
-
-            summaryStyle.setBigContentTitle(gameName);
-
-            builder.setContentIntent(contentIntent)
-                    .setWhen(System.currentTimeMillis())
-                    .setContentTitle(gameName)
-                    .setContentText(lastMessage)
-                    .setStyle(summaryStyle);
+        for(String m:message)
+        {
+            inboxStyle.addLine(m);
         }
-        else{
-            builder.setContentIntent(contentIntent)
-                    .setWhen(System.currentTimeMillis())
-                    .setAutoCancel(true)
-                    .setContentTitle(title)
-                    .setContentText(message);
-        }
+        inboxStyle.setBigContentTitle(gameName);
+        builder.setStyle(inboxStyle);
+
 
         if (Build.VERSION.SDK_INT >= 21)
             builder.setColor(color);
@@ -136,28 +127,26 @@ public class UnityNotificationManager extends BroadcastReceiver {
                     1000L, 1000L
             });
 
-
         if(lights)
             builder.setLights(Color.GREEN, 3000, 3000);
 
-        Notification notification = builder.build();
 
-        notification.flags = Notification.DEFAULT_LIGHTS | Notification.FLAG_AUTO_CANCEL;
-        notificationManager.notify(164913, notification);
+        Notification notification = builder.build();
+        notification.flags |= Notification.FLAG_AUTO_CANCEL;
+        notificationManager.notify(112, notification);
+
     }
 
     public static void CancelNotification(int id) {
         Activity currentActivity = UnityPlayer.currentActivity;
         AlarmManager am = (AlarmManager)currentActivity.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(currentActivity, UnityNotificationManager.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(currentActivity, id, intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(currentActivity, id, intent,PendingIntent.FLAG_UPDATE_CURRENT);
         am.cancel(pendingIntent);
-        StackNotificationHelper.ClearNotificationById(id);
     }
 
     public static void CancelAll(){
         NotificationManager notificationManager = (NotificationManager)UnityPlayer.currentActivity.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancelAll();
-        StackNotificationHelper.ClearNotification();
     }
 }
