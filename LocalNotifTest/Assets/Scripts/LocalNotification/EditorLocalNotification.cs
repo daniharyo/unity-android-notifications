@@ -14,6 +14,11 @@ public class EditorLocalNotification : ILocalNotification
 		Debug.Log (string.Format ("<color=lime>Editor Create local notification title = {0} , \nmessage = {1}, \ndelay = {2} </color>", title, text, delaySeconds));
 	}
 
+	public void CreateNotification (int id, string title, string text, System.DateTime time)
+	{
+		Debug.Log (string.Format ("<color=lime>Editor Create local notification title = {0} , \nmessage = {1}, \ntime = {2} </color>", title, text, time));
+	}
+
 	public void CancelScheduledNotification (int id)
 	{
 		Debug.Log ("<color=lime>Editor Cancel scheduled local notification of id : " + id.ToString () + "</color>");

@@ -36,13 +36,19 @@ public class IOSLocalNotification : ILocalNotification
 
 	}
 
+	public void CreateNotification (int id, string title, string text, DateTime time)
+	{
+		NotificationModel model = new NotificationModel (id, title, text, time);
+		notificationList.Add (model);
+	}
+
 	public void Dispatch ()
 	{
 		#if UNITY_IOS
 		foreach(NotificationModel model in notificationList)
 		{
 			var notif = new UnityEngine.iOS.LocalNotification();
-			notif.fireDate = DateTime.Now.AddSeconds(model.delaySeconds);
+			notif.fireDate = model.Time;
 			notif.alertAction = model.title;
 			notif.alertBody = model.message;
 			Notification.ScheduleLocalNotification(notif);

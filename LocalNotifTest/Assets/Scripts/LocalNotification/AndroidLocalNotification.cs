@@ -27,6 +27,13 @@ public class AndroidLocalNotification :ILocalNotification
 		notificationList.Add (model);
 	}
 
+	public void CreateNotification (int id, string title, string text, DateTime time)
+	{
+		NotificationModel model = new NotificationModel (id, title, text, time);
+		notificationList.Add (model);
+	}
+
+
 	public void Dispatch ()
 	{
 		if (notificationList != null && notificationList.Count > 0) {
@@ -34,12 +41,14 @@ public class AndroidLocalNotification :ILocalNotification
 
 			NotificationModel fModel = sortedList [0];
 
+			string[] summary = new string[]{fModel.message};
+
 			SendNotification (fModel.id, 
-				(int)fModel.delaySeconds, 
+				(int)fModel.getDispatchDelay(), 
 				fModel.title, 
 				fModel.message, 
-				new List<string> ().ToArray (), 
-				Color.white);
+				summary, 
+				bgColor);
 			
 			for (int i = 1; i < sortedList.Count; i++) {
 				List<string> messages = new List<string> ();
@@ -51,7 +60,7 @@ public class AndroidLocalNotification :ILocalNotification
 				messages.Add (sortedList [i].message);
 
 				SendNotification (sortedList [i].id, 
-					(int)sortedList [i].delaySeconds, 
+					(int)sortedList [i].getDispatchDelay(), 
 					sortedList [i].title, 
 					sortedList [i].message,
 					messages.ToArray (), 
@@ -77,7 +86,7 @@ public class AndroidLocalNotification :ILocalNotification
 	public void CancelAllScheduledNotification ()
 	{
 		CancelAllNotifications ();
-		notificationList.Clear();
+		notificationList.Clear ();
 	}
 
 	#endregion
