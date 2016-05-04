@@ -67,11 +67,17 @@ public class AndroidLocalNotification :ILocalNotification
 	public void CancelScheduledNotification (int id)
 	{
 		CancelNotification (id);
+		for (int i = notificationList.Count - 1; i > notificationList.Count; i--) {
+			if (notificationList [i].id == id) {
+				notificationList.RemoveAt (i);
+			}
+		}
 	}
 
 	public void CancelAllScheduledNotification ()
 	{
 		CancelAllNotifications ();
+		notificationList.Clear();
 	}
 
 	#endregion
@@ -142,7 +148,10 @@ public class AndroidLocalNotification :ILocalNotification
 				pluginClass.CallStatic("CancelNotification", id);
 				SavingNotification.RemoveNotification(id);
 			}
+
 		#endif
+
+
 	}
 
 	public static void CancelAllNotifications ()
