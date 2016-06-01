@@ -32,7 +32,8 @@ public class NotificationModel
 		this.id = id;
 		this.title = title;
 		this.message = message;
-		this.delaySeconds = delaySecond;
+        this.delaySeconds = delaySecond;
+        this.Time = DateTime.Now.AddSeconds(delaySecond);
 		delayType = NotificationDelayType.DELAY_SECONDS;
 	}
 
