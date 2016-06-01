@@ -36,8 +36,8 @@ public class AndroidLocalNotification :ILocalNotification
 
 	public void Dispatch ()
 	{
-		if (notificationList != null && notificationList.Count > 0) {
-			List<NotificationModel> sortedList = notificationList.OrderBy (x => x.delaySeconds).ToList ();
+        if (notificationList != null && notificationList.Count > 0) {
+            List<NotificationModel> sortedList = notificationList.OrderBy (x => x.getDispatchDelay()).ToList ();
 
 			NotificationModel fModel = sortedList [0];
 
